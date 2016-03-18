@@ -4,7 +4,7 @@ This is a python 3 library that provides IP to ISP lookups.  Given an IP address
 returns the Autonomous System Number (ASN) and ISP name.
 
 The data is downloaded automatically from http://thyme.apnic.net, and is automatically
-refreshed at regular intervals (defaults to 30 days).  The upstream data source
+refreshed at regular intervals (defaults to 14 days).  The upstream data source
 is updated daily.
 
 
@@ -21,17 +21,17 @@ wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 echo "channels:\n  - ActivisionGameScience\n  - defaults" > ~/.condarc
 
 # create and activate an environment that contains pyisp 
-conda create -n pyispenv python=3.4 pyisp ipython -y
-source activate pyispenv
+conda create -n fooenv python=3.4 pyisp ipython -y
+source activate fooenv
 
 # start ipython and you're cooking!
 ```
 
 ## Usage
 
-The API is compatible with the Maxmind commercial offering so that it is
-easy to switch to Maxmind when moving to production.  The only difference is
-that the namespace `pyisp` is used instead of `geoip2`: 
+The API is similar to the Maxmind commercial offering so that it is
+easy to switch if necessary.  One difference is that
+the namespace `pyisp` is used instead of `geoip2`: 
 ```
     import pyisp.database as ispdatabase
 
@@ -44,11 +44,11 @@ that the namespace `pyisp` is used instead of `geoip2`:
 
 ```
 
-Note that this library automatically fetches the database from the internet
-and stores it locally on disk.  The frequency of updates and location on disk
-can be controlled by passing extra arguments:
+Notice that the arguments to `Reader()` are different from Maxmind's API.
+Instead of passing a filename, there are two optional arguments that determine the 
+auto-refresh interval and location to write the database locally on disk:
 ```
-    reader = ispdatabase.Reader(refresh_days=14, cache_dir=/var)
+    reader = ispdatabase.Reader(refresh_days=7, cache_dir='/tmp')
 ```
 If you pass `cache_dir=None` then nothing will be stored on disk and the
 database will be re-downloaded each time the object is instantiated.  Please
@@ -64,7 +64,7 @@ You can build and install manually with the following command:
 ```
 where `0.1.0` should be replaced with whatever tag you checked out.
 
-Better, a conda build recipe is provided (currently only works in Linux).  Assuming you have your
+A conda build recipe is also provided (currently only works in Linux).  Assuming you have your
 environment set up (see e.g. https://github.com/ActivisionGameScience/ags_conda_recipes.git),
 you can build the package by running
 ```

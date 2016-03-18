@@ -28,7 +28,7 @@ class Reader():
     asn_isp_prefix = "pyisp_asn_isp_db_"
     ip_asn_prefix = "pyisp_ip_asn_db_"
 
-    def __init__(self, refresh_days=30, cache_dir=''):
+    def __init__(self, refresh_days=14, cache_dir=''):
 
         # initialize some variables
         self._refresh_seconds = refresh_days*86400
