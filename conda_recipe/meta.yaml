@@ -1,0 +1,25 @@
+package:
+  name: pyisp
+  version: {{ environ.get('VERSION', '') }}
+
+source:
+  path: ../
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - pip
+    - py-radix
+
+  run:
+    - python
+    - py-radix
+
+test:
+  imports:
+    - pyisp
+
+about:
+  home: https://github.com/ActivisionGameScience/pyisp.git
+  license:  BSD 3-clause
