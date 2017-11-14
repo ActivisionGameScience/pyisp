@@ -48,7 +48,7 @@ Notice that the arguments to `Reader()` are different from Maxmind's API.
 Instead of passing a filename, there are two optional arguments that determine the 
 auto-refresh interval and location to write the database locally on disk:
 ```
-    reader = ispdatabase.Reader(refresh_days=7, cache_dir='/tmp')
+    reader = ispdatabase.Reader(refresh_days=14, cache_dir='/tmp')
 ```
 If you pass `cache_dir=None` then nothing will be stored on disk and the
 database will be re-downloaded each time the object is instantiated.  Please

@@ -3,10 +3,12 @@ import urllib.request
 import ssl
 if hasattr(ssl, '_create_unverified_context'):
     ssl._create_default_https_context = ssl._create_unverified_context
-import os.path
+import os
 import time
 import re
+from tempfile import gettempdir
 
+from ipaddress import ip_address
 
 __all__ = ['Reader', ]
 
@@ -28,24 +30,26 @@ class Reader():
     asn_isp_prefix = "pyisp_asn_isp_db_"
     ip_asn_prefix = "pyisp_ip_asn_db_"
 
-    def __init__(self, refresh_days=14, cache_dir=''):
+    def __init__(self, refresh_days=14, cache_dir=None):
 
         # initialize some variables
         self._refresh_seconds = refresh_days*86400
         self._cache_dir = cache_dir
-        if self._cache_dir == '':
-            self._cache_dir = os.getcwd()
-        self._last_refresh = 0
+        if not self._cache_dir:
+            self._cache_dir = os.path.join(gettempdir(), 'pyisp')
 
         # if a cache directory was specified, find the latest files
-        if self._cache_dir is not None:
+        if os.path.isdir(self._cache_dir):
             asn_isp_file = self._find_latest_filename_in_dir(self._cache_dir, self.asn_isp_prefix)
             ip_asn_file = self._find_latest_filename_in_dir(self._cache_dir, self.ip_asn_prefix)
             # compute the timestamp
             self._last_refresh = self._extract_timestamp_from_filename(asn_isp_file)
-            # make sure both files have the same timestamp
+            # sanity check that both files are in sync
             if self._last_refresh != self._extract_timestamp_from_filename(ip_asn_file):
                 self._last_refresh = 0
+        else:
+            os.mkdir(self._cache_dir)
+            self._last_refresh = 0
 
         # if files are too old (or missing), then refresh
         if time.time() > self._last_refresh + self._refresh_seconds:
@@ -53,9 +57,9 @@ class Reader():
 
         # else load from the files
         else:
-            with open(asn_isp_file, 'rb') as f:
+            with open(os.path.join(self._cache_dir, asn_isp_file), 'rb') as f:
                 asn_isp_raw = f.read()
-            with open(ip_asn_file, 'rb') as f:
+            with open(os.path.join(self._cache_dir, ip_asn_file), 'rb') as f:
                 ip_asn_raw = f.read() 
             self._build_radix_tree(asn_isp_raw, ip_asn_raw)
 
@@ -87,8 +91,11 @@ class Reader():
         lines = asn_isp_raw.decode('utf-8', 'ignore').splitlines()
         for line in lines:
             tokens = line.split()
-            asn = int(line[0:5])
-            isp = line[6:]
+            try:
+                asn = int(line[:6])  # this occasionally fails, so skip if so
+            except:
+                continue
+            isp = line[7:]
             asn_isp_map[asn] = isp
     
         # build the ipaddr -> ASN lookup
@@ -136,6 +143,9 @@ class Reader():
         # do we need to refresh the database?
         if time.time() > self._last_refresh + self._refresh_seconds:
             self._refresh()
+
+        # convert ip to string (in case somebody sent int)
+        ipaddress = str(ip_address(ipaddress))
 
         response = ISPResponse()
         rnode = self._rtree.search_best(ipaddress)
