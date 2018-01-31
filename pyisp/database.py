@@ -63,6 +63,8 @@ class Reader():
                 ip_asn_raw = f.read() 
             self._build_radix_tree(asn_isp_raw, ip_asn_raw)
 
+        self.is_busy = False
+
     def _find_latest_filename_in_dir(self, dirname, file_prefix):
         if not os.path.isdir(dirname):
             raise RuntimeError("directory %s does not exist" % dirname)
@@ -113,6 +115,7 @@ class Reader():
                 rnode.data['isp'] = ''
 
     def _refresh(self):
+        self.is_busy = True
         print("Fetching from %s" % self.asn_isp_url)
         with urllib.request.urlopen(self.asn_isp_url) as response:
             asn_isp_raw = response.read()
@@ -124,6 +127,7 @@ class Reader():
         self._build_radix_tree(asn_isp_raw, ip_asn_raw)
         self._last_refresh = int(time.time())
         self._save_files(asn_isp_raw, ip_asn_raw)
+        self.is_busy = False
 
     def _save_files(self, asn_isp_raw, ip_asn_raw):
         if self._cache_dir is None:
